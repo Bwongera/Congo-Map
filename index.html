@@ -1,0 +1,450 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Home</title>
+
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #050914;
+      color: white;
+      overflow: hidden;
+    }
+
+    #map {
+      width: 100%;
+      height: 100dvh;
+      background: #050914;
+    }
+
+    #intro {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      background: radial-gradient(circle, #123b63, #030711 75%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 1.5s ease;
+    }
+
+    .globe {
+      width: 230px;
+      height: 230px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 145px;
+      background: radial-gradient(circle at 30% 25%, #60d5ff, #0750a2 65%, #020617);
+      box-shadow: 0 0 35px #168bff, 0 0 100px #0066cc55;
+      animation: spin 7s linear infinite, float 3s ease-in-out infinite;
+    }
+
+    #intro h1 {
+      margin-top: 30px;
+      font-size: clamp(24px, 5vw, 42px);
+      letter-spacing: 5px;
+      text-align: center;
+    }
+
+    #intro p {
+      margin-top: 12px;
+      color: #a9dfff;
+      letter-spacing: 3px;
+      text-align: center;
+    }
+
+    @keyframes spin {
+      0% { transform: rotateY(0deg); }
+      100% { transform: rotateY(360deg); }
+    }
+
+    @keyframes float {
+      0%, 100% { translate: 0 0; }
+      50% { translate: 0 -12px; }
+    }
+
+    #locationInfo {
+      position: fixed;
+      top: 25px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      width: min(90%, 600px);
+      text-align: center;
+      padding: 18px;
+      border: 1px solid #ffffff30;
+      border-radius: 18px;
+      background: #050914dd;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 35px #0006;
+      transition: opacity 0.5s;
+    }
+
+    #locationInfo h2 {
+      font-size: clamp(19px, 4vw, 30px);
+      color: #65d8ff;
+      margin-bottom: 8px;
+    }
+
+    #locationInfo p {
+      color: #e4eaf3;
+      font-size: 14px;
+    }
+
+    .controls {
+      position: fixed;
+      bottom: 25px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      width: 95%;
+    }
+
+    button {
+      border: 1px solid #6dd5ff70;
+      border-radius: 30px;
+      background: #071b31eF;
+      color: white;
+      padding: 12px 20px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #087dbb;
+      transform: translateY(-2px);
+    }
+
+    #ending {
+      position: fixed;
+      inset: 0;
+      z-index: 3000;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 25px;
+      background: radial-gradient(circle at center, #103c60, #030711 75%);
+    }
+
+    #ending h1 {
+      font-size: clamp(30px, 7vw, 65px);
+      color: #67d9ff;
+      letter-spacing: 3px;
+      animation: appear 2s ease;
+    }
+
+    #ending h2 {
+      font-size: clamp(20px, 4vw, 35px);
+      margin-top: 22px;
+    }
+
+    #ending p {
+      margin-top: 15px;
+      color: #c3d5e8;
+      letter-spacing: 3px;
+    }
+
+    @keyframes appear {
+      from { opacity: 0; transform: scale(0.7); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .place-label {
+      background: #071525ee;
+      color: white;
+      border: 1px solid #62d6ff;
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-weight: bold;
+      box-shadow: 0 0 15px #00aaff50;
+    }
+
+    .leaflet-tooltip.place-label::before {
+      display: none;
+    }
+
+    .leaflet-control-attribution {
+      font-size: 10px !important;
+    }
+
+    @media (max-width: 600px) {
+      .globe {
+        width: 175px;
+        height: 175px;
+        font-size: 110px;
+      }
+
+      #locationInfo {
+        top: 15px;
+        padding: 12px;
+      }
+
+      button {
+        padding: 10px 14px;
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <section id="intro">
+    <div class="globe">🌎</div>
+    <h1>MY WORLD</h1>
+    <p>MY STORY • MY HOME</p>
+  </section>
+
+  <div id="map"></div>
+
+  <div id="locationInfo">
+    <h2 id="placeName">Welcome to my world 🌎</h2>
+    <p id="placeDescription">
+      Discover the places that make my story.
+    </p>
+  </div>
+
+  <div class="controls"></div>
+
+  <section id="ending">
+    <h1>FULL STACK DEVELOPER</h1>
+    <h2>JOHN 💻</h2>
+    <p>MY HOME • MY STORY • MY FUTURE</p>
+    <br />
+    <button id="replayBtn">↻ Replay Journey</button>
+  </section>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    const map = L.map("map", {
+      zoomControl: false,
+      scrollWheelZoom: false
+    }).setView([-1.5, 29.0], 5);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    L.control.zoom({ position: "bottomright" }).addTo(map);
+
+    const places = [
+      {
+        name: "Democratic Republic of the Congo 🇨🇩",
+        description: "Kinshasa • The heart of Central Africa",
+        coords: [-2.5, 23.5],
+        zoom: 5
+      },
+      {
+        name: "Nord-Kivu 🇨🇩",
+        description: "Eastern Democratic Republic of the Congo",
+        coords: [-1.5, 28.9],
+        zoom: 8
+      },
+      {
+        name: "Masisi",
+        description: "Nord-Kivu • A place close to my heart",
+        coords: [-1.40, 28.82],
+        zoom: 10
+      },
+      {
+        name: "Goma",
+        description: "Nord-Kivu • Near Lake Kivu",
+        coords: [-1.679, 29.222],
+        zoom: 12
+      },
+      {
+        name: "Kitchanga (Kichanga)",
+        description: "Masisi Territory • Nord-Kivu",
+        coords: [-1.58, 28.78],
+        zoom: 12
+      },
+      {
+        name: "Mushaki",
+        description: "Masisi Territory • Nord-Kivu",
+        coords: [-1.52, 28.83],
+        zoom: 12
+      },
+      {
+        name: "Rubaya",
+        description: "Masisi Territory • Nord-Kivu",
+        coords: [-1.47, 28.75],
+        zoom: 12
+      },
+      {
+        name: "Kirorirwe",
+        description: "Nord-Kivu • Democratic Republic of the Congo",
+        coords: [-1.35, 28.90],
+        zoom: 12
+      },
+      {
+        name: "Nyamitabo",
+        description: "Nord-Kivu • My home region",
+        coords: [-1.43, 28.80],
+        zoom: 12
+      },
+      {
+        name: "This is my home ❤️",
+        description: "Masisi, Nord-Kivu • My roots, my story",
+        coords: [-1.43, 28.82],
+        zoom: 10
+      }
+    ];
+
+    let currentIndex = -1;
+    let timer = null;
+    let playing = false;
+    let activeMarker = null;
+
+    const intro = document.getElementById("intro");
+    const info = document.getElementById("locationInfo");
+    const placeName = document.getElementById("placeName");
+    const placeDescription = document.getElementById("placeDescription");
+    const ending = document.getElementById("ending");
+
+    function showPlace(index) {
+      if (index >= places.length) {
+        finishJourney();
+        return;
+      }
+
+      currentIndex = index;
+      const place = places[index];
+
+      placeName.textContent = place.name;
+      placeDescription.textContent = place.description;
+
+      if (activeMarker) {
+        map.removeLayer(activeMarker);
+      }
+
+      map.flyTo(place.coords, place.zoom, {
+        animate: true,
+        duration: 3
+      });
+
+      activeMarker = L.circleMarker(place.coords, {
+        radius: 9,
+        color: "#ffffff",
+        weight: 3,
+        fillColor: "#00baff",
+        fillOpacity: 1
+      }).addTo(map);
+
+      activeMarker.bindTooltip(place.name, {
+        permanent: true,
+        direction: "top",
+        className: "place-label",
+        offset: [0, -8]
+      }).openTooltip();
+    }
+
+    function startJourney() {
+      clearTimeout(timer);
+      playing = true;
+      ending.style.display = "none";
+
+      if (currentIndex < 0 || currentIndex >= places.length - 1) {
+        currentIndex = -1;
+      }
+
+      intro.style.opacity = "0";
+
+      setTimeout(() => {
+        intro.style.display = "none";
+        map.invalidateSize();
+        nextPlace();
+      }, 1000);
+    }
+
+    function nextPlace() {
+      if (!playing) return;
+
+      showPlace(currentIndex + 1);
+
+      timer = setTimeout(() => {
+        if (playing) {
+          nextPlace();
+        }
+      }, 5500);
+    }
+
+    function pauseJourney() {
+      playing = false;
+      clearTimeout(timer);
+    }
+
+    function manualNext() {
+      clearTimeout(timer);
+      playing = false;
+
+      if (currentIndex >= places.length - 1) {
+        finishJourney();
+      } else {
+        showPlace(currentIndex + 1);
+      }
+    }
+
+    function finishJourney() {
+      playing = false;
+      clearTimeout(timer);
+
+      info.style.display = "none";
+      ending.style.display = "flex";
+    }
+
+    function replayJourney() {
+      clearTimeout(timer);
+      playing = false;
+      currentIndex = -1;
+
+      if (activeMarker) {
+        map.removeLayer(activeMarker);
+        activeMarker = null;
+      }
+
+      ending.style.display = "none";
+      info.style.display = "block";
+
+      intro.style.display = "flex";
+      intro.style.opacity = "1";
+
+      map.flyTo([-1.5, 29.0], 5, {
+        duration: 2
+      });
+    }
+
+    document.getElementById("replayBtn").addEventListener(
+      "click", replayJourney
+    );
+
+    setTimeout(startJourney, 5000);
+  </script>
+
+</body>
+</html>
